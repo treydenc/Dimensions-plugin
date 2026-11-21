@@ -140,11 +140,10 @@ export function Undecided({ what }: { what?: string }) {
   return <span className="inline-block whitespace-nowrap rounded-row border border-dashed border-warning/60 px-1.5 py-0.5 font-mono text-xs text-warning">[ {what ?? 'undecided'} ]</span>;
 }
 
-export function Nav({ name, current }: { name: ReactNode; current: 'tool' | 'plan' | 'forms' | 'kit' }) {
+export function Nav({ name, current }: { name: ReactNode; current: 'tool' | 'plan' | 'kit' }) {
   const links = [
     { id: 'tool', href: '/', label: 'Tool' },
     { id: 'plan', href: '/plan', label: 'Plan' },
-    { id: 'forms', href: '/forms', label: 'Forms' },
     { id: 'kit', href: '/kit', label: 'Kit' },
   ] as const;
   return (
@@ -535,17 +534,6 @@ export function Preview({ w, h, label, working, children }: { w: number; h: numb
         {children}
       </span>
     </div>
-  );
-}
-
-/** Links back to the starter's own pages. Remove before shipping a tool. */
-export function StarterLinks() {
-  return (
-    <span className="inline-flex gap-3 text-[11px] text-ink-3">
-      {[['/plan', 'Plan'], ['/forms', 'Forms'], ['/kit', 'Kit']].map(([href, label]) => (
-        <Link key={href} href={href} className="transition-colors hover:text-ink-1">{label}</Link>
-      ))}
-    </span>
   );
 }
 

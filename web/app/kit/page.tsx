@@ -20,7 +20,7 @@ const PARTS = [
   { id: 'interaction', title: 'Interaction', intro: 'How the tool answers a pointer, a keyboard and a wait.',
     entries: ['Hover', 'Focus and keyboard', 'Targets', 'The four states'] },
   { id: 'patterns', title: 'Patterns', intro: 'Whole arrangements, ready to copy.',
-    entries: ['Run and result', 'Canvas and docked panel', 'Propose, check, approve', 'Three forms'] },
+    entries: ['Run and result', 'Canvas and docked panel', 'Propose, check, approve'] },
 ] as const;
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -541,14 +541,6 @@ export default function Kit() {
                 </ul>
                 <div className="mt-4"><Button kind="quiet" disabled={!kept}>Save {kept ? 1 : 0} approved</Button></div>
               </Stage>
-            </Entry>
-
-            <Entry part={P} title="Three forms" intent="The same tool as a web app, a plug-in panel and a desktop app. Each is a shell with slots; the plan says which one a tool uses.">
-              <Spec head={['Form', 'Shell', 'Scale', 'When']} rows={[
-                [<a key="w" href="/forms/web" className="underline decoration-line-hi underline-offset-4">Web app</a>, 'WebShell', 'Page', 'People open it in a browser and will not install anything'],
-                [<a key="p" href="/forms/plugin" className="underline decoration-line-hi underline-offset-4">Plug-in</a>, 'PluginShell', 'Panel, 320 wide', 'The work already lives in another application'],
-                [<a key="d" href="/forms/desktop" className="underline decoration-line-hi underline-offset-4">Desktop app</a>, 'DesktopShell', 'Panel chrome, full window', 'Long sessions with many files, or files that must stay on the machine'],
-              ]} />
             </Entry>
           </section>
         </main>

@@ -13,7 +13,7 @@ npm run build       # must pass before every push
 ## Rules
 
 - **Small steps.** One change at a time, typecheck, then the next. Do not rewrite files you were not asked to touch.
-- **`lib/claude.ts` is the only file that calls the Anthropic API.** Routes use `askClaude()` for one structured answer or `runAgent()` for a capped tool loop.
+- **`lib/claude.ts` is the only file that calls the Anthropic API.** Routes use `askClaude()` for one structured answer.
 - **Every model answer has a Zod schema** in `lib/schemas.ts`. No free-text parsing.
 - **Rules you can write down go in code** (`lib/checks.ts`), not in a prompt. The model proposes, code checks, the person decides.
 - **Prompts live in `lib/prompts.ts`.**
@@ -30,7 +30,7 @@ npm run build       # must pass before every push
 - **Colour:** dark ground, stone ink, silver accent. Spectrum colours mark categories only and always sit next to a text label.
 - **Type:** Instrument Sans. Sizes in use: 48, 30, 20, 14, 12, 11.
 - **Read `/kit` before building a screen.** It says what each component is for. Hover moves a thing one step toward full ink and nothing else. A result arriving uses the `enter` class.
-- **Three forms.** A tool is a web app (`WebShell`), a plug-in panel (`PluginShell`) or a desktop app (`DesktopShell`), from `components/shells/`. Use the one `plan.form.production` names. Put content in the shell's slots; do not rebuild the frame. A plug-in demo never imitates the host application's interface.
+- **One form.** This tool is a plug-in panel (`PluginShell`, in `components/shells/`). Put content in the shell's slots; do not rebuild the frame. A plug-in demo never imitates the host application's interface.
 - **Two scales.** Page scale (36px buttons, 14px text) for full screens. Panel scale (28px controls, 12px text) inside `Workspace`, for tools that sit beside a canvas like a plug-in.
 
 ## When I say "log it"

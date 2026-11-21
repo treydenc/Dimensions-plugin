@@ -1,11 +1,9 @@
 // The plan, drawn. Everything here comes from plan.ts. Edit that file and this page changes.
-import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Chip, Label, Mark, Nav, Panel, Undecided } from '@/components/ui';
 import { agentVerdict, MOMENTS } from '@/lib/plan-types';
 import { plan } from '@/plan';
 
-const FORM_ROUTE = { 'hosted web app': '/forms/web', 'desktop app': '/forms/desktop', plugin: '/forms/plugin' } as const;
 
 const countOpen = (v: unknown): number =>
   v === null ? 1 : Array.isArray(v) ? (v.length === 0 ? 1 : v.reduce((n: number, x) => n + countOpen(x), 0))
@@ -78,7 +76,6 @@ export default function PlanPage() {
           <dl>
             <Row k="Demo">{plan.form.demo}</Row>
             <Row k="In production"><V v={plan.form.production} /></Row>
-            <Row k="Layout">{plan.form.production ? <Link href={FORM_ROUTE[plan.form.production]} className="underline decoration-line-hi underline-offset-4 hover:decoration-ink-1">{FORM_ROUTE[plan.form.production]}</Link> : <Undecided />}</Row>
             <Row k="Why"><V v={plan.form.why} /></Row>
           </dl>
         </Panel>
