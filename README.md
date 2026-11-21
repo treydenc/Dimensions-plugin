@@ -8,8 +8,6 @@ A Photoshop panel that turns a film client's finished poster into the other size
 
 Agency designers rebuild a client's one sheet by hand for 20 to 40 placements, at 15 to 40 minutes each. The time goes on repositioning the same eight elements. The expensive mistakes are the legal lines. This tool does the repositioning, checks the legal lines, and hands over by name anything it cannot do.
 
-Built as a practice run for a two-hour brief: [`sample/02-poster-resize/BRIEF.md`](sample/02-poster-resize/BRIEF.md).
-
 ## How it works
 
 1. **Add the client's rules.** The designer uploads the client's own document. The tool proposes one rule for each kind of layer, with the client's exact words beside it, and uses only the rules the designer ticks.
@@ -37,47 +35,42 @@ If a rule can be written down, code does it. A model is used only for judgment, 
 
 It is a fixed chain with caps, not an agent. The steps are the same for every size and known before it starts, so the model never chooses what happens next.
 
-## How it flows
-
-Rounded boxes are the designer. Square boxes are code. Six-sided boxes are a model call.
-
-**Reading the rules**
+## Architecture
 
 ```mermaid
-flowchart LR
-  doc(["Client's document"]):::person --> read{{"Read the rules"}}:::ai
-  read --> check["Check each rule"]:::code
-  check --> tick(["Tick the rules to use"]):::person
-  tick --> rules[("Rules in use")]:::code
+flowchart TD
+  rulesDoc["Client's rules document"]:::person --> read["Read the rules"]:::ai
+  read --> gateRules{"Check each proposed rule"}:::code
+  gateRules --> tick["Designer ticks the rules to use"]:::person
+  tick --> rules[("Rules in use")]:::store
 
-  classDef person fill:#0c0a09,stroke:#d6d3d1,color:#f5f5f4
-  classDef code fill:#1c1917,stroke:#57534e,color:#d6d3d1
-  classDef ai fill:#e7e5e4,stroke:#e7e5e4,color:#0c0a09
+  doc["Open poster in Photoshop"]:::code --> match["Match layers to rules by name"]:::code
+  sizes["Designer ticks the sizes"]:::person --> match
+  rules --> match
+
+  match --> fit["Scale the poster to fit"]:::code
+  fit --> gate1{"Checks"}:::code
+  gate1 -- "fails a check, or leaves the frame too empty" --> place["Place the layers"]:::ai
+  place --> gate2{"Checks"}:::code
+  gate2 -- "fails, one retry" --> place
+
+  gate1 -- "passes" --> look["Look at a picture of the layout"]:::ai
+  gate2 -- "passes, or tries used up" --> look
+  look -- "sees a problem, one retry" --> place
+
+  look --> panel["Panel: Ready, Check this, or Needs you"]:::code
+  panel --> yes["Designer: Make in Photoshop, or Try again"]:::person
+  yes --> ps["New document with editable layers"]:::code
+
+  classDef ai fill:#3b2f5c,stroke:#a78bfa,color:#f5f3ff
+  classDef code fill:#1c1917,stroke:#a8a29e,color:#e7e5e4
+  classDef person fill:#1f3a2e,stroke:#5fbf8a,color:#ecfdf5
+  classDef store fill:#0a0a0a,stroke:#57534e,color:#d6d3d1
 ```
 
-**Making a size**
+Purple is a model call. Grey is plain code. Green is a decision the designer makes.
 
-```mermaid
-flowchart LR
-  start(["Tick sizes, Propose"]):::person --> fit["Scale to fit"]:::code
-  fit --> c1["Checks"]:::code
-  c1 --> look{{"Look at the picture"}}:::ai
-  look --> label["Ready, Check this or Needs you"]:::code
-  label --> yes(["Make, or Try again"]):::person
-  yes --> ps["New Photoshop document"]:::code
-
-  c1 -. "fails" .-> place{{"Place the layers"}}:::ai
-  place --> c2["Checks"]:::code
-  c2 --> look
-  c2 -. "fails, once" .-> place
-  look -. "sees a problem, once" .-> place
-
-  classDef person fill:#0c0a09,stroke:#d6d3d1,color:#f5f5f4
-  classDef code fill:#1c1917,stroke:#57534e,color:#d6d3d1
-  classDef ai fill:#e7e5e4,stroke:#e7e5e4,color:#0c0a09
-```
-
-The top row is the path when code alone is enough. The dotted lines are the only loops, and each has a cap.
+Three caps keep it predictable: at most two tries each time a size is laid out, at most one send-back after the look, and at most two looks per size.
 
 ## Run it
 
@@ -132,7 +125,7 @@ The poster is unreleased artwork, so the panel always says what leaves the compu
 
 </details>
 
-## With more time
+## Next to do
 
 1. The four wide sizes, with a one-line title.
 2. Check a document again after the designer has edited it, so legal lines are checked at hand-off and not only at proposal.
