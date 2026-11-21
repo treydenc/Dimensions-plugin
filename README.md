@@ -14,10 +14,6 @@ Agency designers rebuild a client's one sheet by hand for 20 to 40 placements, a
 2. **Tick the sizes and press Propose.** Each size comes back with a preview and a label: **Ready**, **Check this** or **Needs you**, with the reason.
 3. **Decide, size by size.** "Make in Photoshop" builds that size as a new document with every layer still movable. "Try again" asks for a new layout. A size that fails a check cannot be made.
 
-> [ Still goes here: `docs/rules.png`. The proposed rules, with the client's words, being ticked. ]
->
-> [ Still goes here: `docs/check-this.png`. A size marked "Check this", with its reason. ]
-
 ## Who does what
 
 If a rule can be written down, code does it. A model is used only for judgment, and never has the last word.
@@ -39,38 +35,40 @@ It is a fixed chain with caps, not an agent. The steps are the same for every si
 
 ```mermaid
 flowchart TD
-  rulesDoc["Client's rules document"]:::person --> read["Read the rules"]:::ai
-  read --> gateRules{"Check each proposed rule"}:::code
-  gateRules --> tick["Designer ticks the rules to use"]:::person
-  tick --> rules[("Rules in use")]:::store
+  rulesDoc(["Client's rules document"]):::person --> read{{"Read the rules"}}:::ai
+  read --> gateRules["Check each rule"]:::code
+  gateRules --> tick(["Tick the rules to use"]):::person
+  tick --> rules[("Rules in use")]:::code
 
-  doc["Open poster in Photoshop"]:::code --> match["Match layers to rules by name"]:::code
-  sizes["Designer ticks the sizes"]:::person --> match
+  sizes(["Tick the sizes, then Propose"]):::person --> match["Read the poster, match layers to rules"]:::code
   rules --> match
-
-  match --> fit["Scale the poster to fit"]:::code
+  match --> fit["Scale to fit"]:::code
   fit --> gate1{"Checks"}:::code
-  gate1 -- "fails a check, or leaves the frame too empty" --> place["Place the layers"]:::ai
+
+  gate1 -->|passes| look{{"Look at the picture"}}:::ai
+  gate1 -.->|fails| place{{"Place the layers"}}:::ai
   place --> gate2{"Checks"}:::code
-  gate2 -- "fails, one retry" --> place
+  gate2 -->|passes| look
+  gate2 -.->|fails, once| place
+  look -.->|sees a problem, once| place
 
-  gate1 -- "passes" --> look["Look at a picture of the layout"]:::ai
-  gate2 -- "passes, or tries used up" --> look
-  look -- "sees a problem, one retry" --> place
+  look --> panel["Ready, Check this or Needs you"]:::code
+  panel --> yes(["Make in Photoshop, or Try again"]):::person
+  yes --> ps["New document, editable layers"]:::code
 
-  look --> panel["Panel: Ready, Check this, or Needs you"]:::code
-  panel --> yes["Designer: Make in Photoshop, or Try again"]:::person
-  yes --> ps["New document with editable layers"]:::code
-
-  classDef ai fill:#3b2f5c,stroke:#a78bfa,color:#f5f3ff
-  classDef code fill:#1c1917,stroke:#a8a29e,color:#e7e5e4
-  classDef person fill:#1f3a2e,stroke:#5fbf8a,color:#ecfdf5
-  classDef store fill:#0a0a0a,stroke:#57534e,color:#d6d3d1
+  classDef ai fill:#2e2647,stroke:#8b7fd1,color:#f5f3ff
+  classDef code fill:#1c1917,stroke:#57534e,color:#e7e5e4
+  classDef person fill:#1c2b24,stroke:#4f9d78,color:#ecfdf5
 ```
 
-Purple is a model call. Grey is plain code. Green is a decision the designer makes.
+| | |
+|---|---|
+| Purple, six-sided | A model call |
+| Grey, square | Code |
+| Green, rounded | The designer |
+| Dotted line | A retry. Each one has a cap. |
 
-Three caps keep it predictable: at most two tries each time a size is laid out, at most one send-back after the look, and at most two looks per size.
+The caps: at most two tries each time a size is laid out, at most one send-back after the look, and at most two looks per size.
 
 ## Run it
 
