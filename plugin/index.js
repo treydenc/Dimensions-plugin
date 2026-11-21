@@ -1,79 +1,77 @@
-const uxp = require('uxp');
-// ======= Webview in a dialog =======
-const openDialogBtn = document.getElementById("openDialogBtn");
-// hiding webview in dialog button by default and enabling for apps other than XD later
-// uxp.host is not available in XD and throws TypeError thats why using try catch
-try {
-    openDialogBtn.style.display = uxp?.host?.name !== "XD" ? "flex" : "none";
-} catch (error) {
-    openDialogBtn.style.display="none";
-    console.log(error?.message);
-}
-openDialogBtn.onclick = showDialog;
-function showDialog() {
-    const dialog = document.getElementById("dialog");
-    document.appendChild(dialog).showModal();
+// Photoshop's side of the bridge. The tool (the web app in the WebView) sends a message,
+// this file does the Photoshop part and sends the answer back. web/lib/host.ts is the other end.
+//
+// Every message is a JSON string: { source, type, id?, payload?, error? }.
+// To add a command, add a case to COMMANDS below and call ask('<name>') in the web app.
+// Commands that change the document must run inside require('photoshop').core.executeAsModal.
+
+const view = document.getElementById('view');
+const dot = document.getElementById('dot');
+const statusText = document.getElementById('statusText');
+
+function setStatus(text, connected) {
+  statusText.textContent = text;
+  dot.className = connected ? 'on' : '';
 }
 
-// print events
-let dialogWebview = document.getElementById("dialogWebview");
-dialogWebview.addEventListener("loadstart", (event) => {
-    console.log("events onloadstart : ", event.url)
-    document.getElementById("dialogLogs").value = "loadstart:" + event.url + "\n" + document.getElementById("dialogLogs").value;
+function send(message) {
+  view.postMessage(JSON.stringify(Object.assign({ source: 'host' }, message)));
+}
+
+/* ── reading the open document ──────────────────────────────────────────── */
+function readLayers(layers, depth) {
+  const out = [];
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
+    let bounds = null;
+    try {
+      const b = layer.bounds;
+      bounds = { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+    } catch (e) { /* some layers have no bounds */ }
+    const item = { id: layer.id, name: layer.name, kind: String(layer.kind), visible: layer.visible, bounds: bounds };
+    if (layer.layers && layer.layers.length && depth < 6) item.layers = readLayers(layer.layers, depth + 1);
+    out.push(item);
+  }
+  return out;
+}
+
+function readDocument() {
+  const doc = require('photoshop').app.activeDocument;
+  if (!doc) return null;
+  return { id: doc.id, title: doc.title, width: doc.width, height: doc.height, resolution: doc.resolution, layers: readLayers(doc.layers, 0) };
+}
+
+/* ── the commands the tool can ask for ──────────────────────────────────── */
+const COMMANDS = {
+  ping: function () {
+    const host = require('uxp').host;
+    return { app: host.name, version: host.version };
+  },
+  getDocument: function () {
+    return readDocument();
+  },
+};
+
+window.addEventListener('message', async function (e) {
+  let m;
+  try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+  if (!m || m.source !== 'tool') return;
+  setStatus('Connected', true);
+  const command = COMMANDS[m.type];
+  if (!command) { send({ type: m.type, id: m.id, error: 'Photoshop does not know "' + m.type + '".' }); return; }
+  try {
+    send({ type: m.type, id: m.id, payload: await command(m.payload) });
+  } catch (err) {
+    send({ type: m.type, id: m.id, error: String((err && err.message) || err) });
+  }
 });
-dialogWebview.addEventListener("loadstop", (event) => {
-    console.log("events onloadstop : ", event.url)
-    document.getElementById("dialogLogs").value = "loadstop:" + event.url + "\n" + document.getElementById("dialogLogs").value;
+
+/* ── the WebView's own events ───────────────────────────────────────────── */
+view.addEventListener('loadstart', function () { setStatus('Loading the tool', false); });
+view.addEventListener('loadstop', function () {
+  setStatus('Page loaded, waiting for the tool to answer', false);
+  send({ type: 'hello' });
 });
-dialogWebview.addEventListener("loaderror", (event) => {
-    console.log("events onloaderror : ", event.url)
-    document.getElementById("dialogLogs").value = "loaderror:" + event.url + "\n" + document.getElementById("dialogLogs").value;
-});
-
-
-// send instructions to webview content
-const dialogCreateTriangleBtn = document.getElementById("dialogCreateTriangleBtn");
-dialogCreateTriangleBtn.onclick = postMessageCreateTriangleInDialog;
-function postMessageCreateTriangleInDialog() {
-    dialogWebview.postMessage("createTriangle");
-}
-
-const dialogTransformTriangleBtn = document.getElementById("dialogTransformTriangleBtn");
-dialogTransformTriangleBtn.onclick = postMessageRotateTriangleInDialog;
-function postMessageRotateTriangleInDialog() {
-    dialogWebview.postMessage("transformTriangle");
-}
-
-// ======= Webview in the plugin panel =======
-
-const openPanelBtn = document.getElementById("openPanelBtn");
-openPanelBtn.onclick = showWebViewInPanel;
-function showWebViewInPanel() {
-    const webviewInPanel = document.getElementById("webviewInPanel");
-    webviewInPanel.style.display = "block";
-}
-
-// send instructions to webview content
-let panelWebview = document.getElementById("panelWebview");
-const panelCreateTriangleBtn = document.getElementById("panelCreateTriangleBtn");
-panelCreateTriangleBtn.onclick = postMessageCreateTriangleInPanel;
-function postMessageCreateTriangleInPanel() {
-    panelWebview.postMessage("createTriangle");
-}
-
-const panelTransformTriangleBtn = document.getElementById("panelTransformTriangleBtn");
-panelTransformTriangleBtn.onclick = postMessageRotateTriangleInPanel;
-function postMessageRotateTriangleInPanel() {
-    panelWebview.postMessage("transformTriangle");
-}
-
-
-// ======= receive message from webview content =======
-window.addEventListener("message", (e) => {
-    console.log(`Message from WebView(Origin:${e.origin}): ${e.data}`);
-    if (e.data.key === "imageDetails") {
-        document.getElementById("snapshot").src = e.data.value;
-    } else if (e.data.key === "canvasDetails") {
-        document.getElementById("logWebview").innerText = e.data.value;
-    }
+view.addEventListener('loaderror', function () {
+  setStatus('Cannot reach localhost:3000. In the web folder, run: npm run dev', false);
 });
