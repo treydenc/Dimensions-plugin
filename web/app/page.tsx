@@ -5,7 +5,7 @@
 // After a layout arrives, the model looks at a picture of it once and may send it back once.
 import { useEffect, useRef, useState } from 'react';
 import {
-  Busy, CheckRow, Chip, Count, EmptyState, ErrorNote, FileDrop, NoteLine, PanelSection, Preview, RowList, Skeleton, SmallButton, StarterLinks, StatusMark, TickRow, Undecided,
+  Busy, CheckRow, Chip, Count, EmptyState, ErrorNote, FileDrop, NoteLine, PanelSection, Preview, RowList, Skeleton, SmallButton, StatusMark, TickRow, Undecided,
 } from '@/components/ui';
 import { HostFrame, PanelRow, PluginShell } from '@/components/shells/PluginShell';
 import type { LayoutStatus, RuleProposal, SizeResult } from '@/lib/checks';
@@ -292,7 +292,6 @@ export default function Home() {
         </SmallButton>
       </div>
       <p className="text-[11px] text-ink-3">Sends layer names, positions, rules and a small picture of each layout to the AI service.</p>
-      <StarterLinks />
     </>
   );
 

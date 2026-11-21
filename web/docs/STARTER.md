@@ -46,7 +46,7 @@ lib/samples.ts          sample input and output (used with no API key)
 lib/store.ts            JSON file store
 lib/loaders.ts          read and upload files in data/: text, JSON, CSV, images, PDFs
 data/                   drop the brief's files here
-practice/               practice briefs with their files; see practice/README.md
+sample/                 the brief with its files; see sample/README.md
 ```
 
 ## Inventory

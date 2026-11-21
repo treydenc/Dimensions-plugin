@@ -1,68 +1,45 @@
-# Introduction
+# The Photoshop side
 
-This sample plugin demonstrates the usage of WebView in your UXP plugin. WebViews are particularly handy when certain web features, such as webGL, are not innately available in UXP.
+A UXP plug-in with one panel. The panel is a WebView that shows the web app in `../web`, so all the
+interface lives there. This folder only hosts it and does the Photoshop work it asks for.
 
-The aim of this plugin is 
-- To showcase WebView within a dialog and a panel.
-- Use WebGL within Webview.
-- Demo the communication between the plugin panel and remote WebView content via `postMessage`
+## Files
 
+| File | What it does |
+|---|---|
+| `manifest.json` | Declares the panel and allows the WebView to load `http://localhost:3000` |
+| `index.html` | The panel: a one-line status and the WebView |
+| `index.js` | Answers the web app's messages and runs the Photoshop commands |
 
-## Documentation
-[postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) - Common for all Host Applications.
+## Commands
 
-### InDesign
-The following docs will help you get additional context
-- [Manifest Permission Module](https://developer.adobe.com/indesign/uxp/plugins/concepts/manifest/#webviewpermission)
-- [HTMLWebView element](https://developer.adobe.com/indesign/uxp/reference/uxp-api/reference-js/Global%20Members/HTML%20Elements/HTMLWebViewElement/)
+The web app sends a message, `index.js` does the Photoshop part and answers. The other end is `web/lib/host.ts`.
 
-### Photoshop
-- [Manifest Permission Module](https://developer.adobe.com/photoshop/uxp/2022/guides/uxp_guide/uxp-misc/manifest-v5/#webviews)
-- [HTMLWebView element](https://developer.adobe.com/photoshop/uxp/2022/uxp-api/reference-js/Global%20Members/HTML%20Elements/HTMLWebViewElement/)
+| Command | Changes the document? | What it does |
+|---|---|---|
+| `ping` | No | Says which application and version is hosting the panel |
+| `getDocument` | No | Returns the open document's size and layers |
+| `makeSizes` | Yes, after the designer's yes | Makes each size as a new document with editable layers |
 
-## Compatibility
-UXP v6.4 or higher
+How `makeSizes` builds a size: it duplicates the whole poster as a new document, sizes and moves each
+layer inside that copy, then trims the canvas to the new size from the top left. It measures every layer
+afterwards. If a layer is not where it should be, that size fails with a plain sentence and the
+half-made document is closed. The poster itself is never changed.
 
-### InDesign
-Since InDesign v18.5
+Every command that changes Photoshop runs inside `core.executeAsModal`.
 
-### Photoshop
-Since Photoshop v24.1.0
+## Load it
 
-## Getting Started
+Needs Photoshop 28 and UXP Developer Tool.
 
-### WebView Demo Server
-Currently, UXP WebView content can only be served from a web URL. UXP does not support loading local HTML content.
-In this plugin, a local server will serve the web page.
+1. In `../web`, run `npm run dev`.
+2. In UXP Developer Tool, choose Add Plugin and pick this folder's `manifest.json`.
+3. Choose Load from the plug-in's menu. The panel's status line reads "Connected" once the web app answers.
 
-Follow the steps to run the local server:
-- Install `http server` by running the following command
-    - Mac - `sudo npm install -g http-server`.
-    - Windows - `npm install -g http-server`.
-- Traverse to `{yourpluginrootdirectory}/Receiver` folder and run `http-server -p 7724`
+After changing `index.js`, reload the plug-in in UXP Developer Tool. Reloading the web page is not enough.
 
-### Load the plugin via UDT
+## Before this could ship
 
-1. Make sure your application is running and you can see it under `Connected apps`
-2. Click on 'Add Plugin' button and select the `manifest.json` of this plugin.
-3. Click on the `•••` menu next to the corresponding plugin row. Select `Load` to view the plugin inside your application.
-Switch over to the host app, and the plugin's panel will be running.
-
-
-## Deep dive
-
-### manifest permission
-To use WebViews in a plugin, the `webview` permission is necessary in [manifest.json](./manifest.json).
-- webview.allow - Enables WebView access to the plugin.
-- webview.domains - Domain of the web URL.
-- webview.enableMessageBridge - Enables the content loaded within WebView to communicate with the plugin.
-
-### uxpAllowInspector
-In [index.html](./index.html), notice the `uxpAllowInspector` added to the WebView element inside the dialog. The purpose of this property is to enable debugging the contents of UXP WebView. Once set to `true`, you can right-click on the webview and select 'Inspect Element' to debug and view the `console.logs` from the webview content separately.</br>
-<b>Example:</b></br>
-```html
-<webview width="100%" height="360px" src="https://www.adobe.com" uxpAllowInspector="true" ></webview>
-```
-
-### update webview page
-If you are making changes to the WebView page (served from the http-server), make sure the http-server doesn't cache. Use `http-server -p 7724 -c-1` to restart the server and disable caching.
+- The web app is hosted at an https address, and `manifest.json` allows that address instead of localhost.
+- The manifest gets a real plug-in ID from Adobe's Developer Distribution portal. The current one is a test value.
+- It is packaged as a `.ccx` from UXP Developer Tool.

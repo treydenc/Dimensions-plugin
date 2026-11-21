@@ -41,4 +41,4 @@ Add an entry to `log` in `plan.ts`: what happened, and what I decided. It shows 
 
 - `web/` is the Next.js app (everything the rules above describe). Run npm commands from inside it.
 - `plugin/` is the Photoshop UXP plug-in: a panel that shows `web` in a WebView and runs Photoshop commands. Load `plugin/manifest.json` in UXP Developer Tool.
-- `practice/` holds the brief.
+- `sample/` holds the brief and its files.

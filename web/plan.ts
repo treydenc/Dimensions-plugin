@@ -2,7 +2,7 @@
 import type { Plan } from '@/lib/plan-types';
 
 export const plan: Plan = {
-  name: null,
+  name: 'Dimens/ons',
   oneLine: null,
   problem: {
     user: 'Designers at an agency, resizing a film client\'s finished poster',
@@ -81,7 +81,7 @@ export const plan: Plan = {
   },
   iterations: [
     { tag: 'v1', goal: 'Story, Square and Video thumbnail working end to end, with rules loaded from layers.json', done: true },
-    { tag: 'v2', goal: 'The look at the picture, a yes and a try again for each size, and the rules reader', done: false },
+    { tag: 'v2', goal: 'The look at the picture, a yes and a try again for each size, and the rules reader', done: true },
     { tag: 'v3', goal: 'States, sample data, README', done: false },
   ],
   cut: [

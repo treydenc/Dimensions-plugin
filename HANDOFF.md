@@ -5,13 +5,13 @@ Read this first in a new thread. It says where things are and what is decided.
 ## What this is
 
 A practice run for my Kettle final round (Monday: a brief and a repo, 2 hours to build, then an 8-minute video).
-This repo is a copy of my starter (`F:\Local-AI-Starter`), set up for the brief in `practice/02-poster-resize/BRIEF.md`.
+This repo is a copy of my starter (`F:\Local-AI-Starter`), set up for the brief in `sample/02-poster-resize/BRIEF.md`.
 
 ## Layout
 
 - `web/` the Next.js app: the tool's interface, the Claude calls, the checks. Run `npm run dev` here (port 3000).
 - `plugin/` a Photoshop UXP plug-in. Its panel is a WebView showing `http://localhost:3000`, plus the Photoshop commands.
-- `practice/02-poster-resize/` the brief, `poster.png`, `layers/`, `layers.json` (each layer's place, role and rule), `sizes.json`.
+- `sample/02-poster-resize/` the brief, `poster.png`, `layers/`, `layers.json` (each layer's place, role and rule), `sizes.json`.
 
 ## What works (checked on my machine, 20 Nov)
 

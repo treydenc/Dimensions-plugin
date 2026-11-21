@@ -48,29 +48,6 @@ function findDocument(id) {
   return null;
 }
 
-function findLayer(layers, id) {
-  for (let i = 0; i < layers.length; i++) {
-    if (layers[i].id === id) return layers[i];
-    if (layers[i].layers && layers[i].layers.length) {
-      const inside = findLayer(layers[i].layers, id);
-      if (inside) return inside;
-    }
-  }
-  return null;
-}
-
-// The colour mode for a new document. Only modes that can hold layers; anything else becomes RGB.
-function newDocumentMode(source) {
-  const constants = require('photoshop').constants;
-  const names = ['CMYK', 'GRAYSCALE', 'LAB', 'RGB'];
-  try {
-    for (let i = 0; i < names.length; i++) {
-      if (source.mode === constants.DocumentMode[names[i]]) return constants.NewDocumentMode[names[i]];
-    }
-  } catch (e) { /* fall through to RGB */ }
-  return constants.NewDocumentMode.RGB;
-}
-
 // An error whose message is already a plain sentence for the person.
 function plain(message) {
   const err = new Error(message);
@@ -161,17 +138,26 @@ async function makeOneSize(source, size) {
       if (!(widthOf(b) > 0)) throw plain('The layer "' + name + '" is empty on the poster, so it cannot be resized. Leave it out and try again.');
       const before = { left: b.left, top: b.top, width: widthOf(b) };
 
-      const percent = (box.w / widthOf(b)) * 100;
-      if (Math.abs(percent - 100) > 0.001) await layer.scale(percent, percent, constants.AnchorPosition.TOPLEFT);
-      b = layer.bounds;
-      if (!near(box.x, b.left, 0.5) || !near(box.y, b.top, 0.5)) await layer.translate(box.x - b.left, box.y - b.top);
+      // Size it, then place it. Then measure, and go round once more if it is still off:
+      // thin text can come out a few pixels different after resizing.
+      for (let pass = 0; pass < 2; pass++) {
+        b = layer.bounds;
+        const percent = (box.w / widthOf(b)) * 100;
+        if (Math.abs(percent - 100) > 0.05) await layer.scale(percent, percent, constants.AnchorPosition.TOPLEFT);
+        b = layer.bounds;
+        if (!near(box.x, b.left, 0.5) || !near(box.y, b.top, 0.5)) await layer.translate(box.x - b.left, box.y - b.top);
+      }
 
       // Measure what really happened. A document with layers in the wrong place must never be reported as made.
       b = layer.bounds;
-      console.log('makeSizes: "' + name + '" in "' + size.name + '": was ' + Math.round(before.left) + ',' + Math.round(before.top) + ' width ' + Math.round(before.width)
-        + '; asked ' + box.x + ',' + box.y + ' width ' + box.w + '; now ' + Math.round(b.left) + ',' + Math.round(b.top) + ' width ' + Math.round(widthOf(b)));
-      if (!near(widthOf(b), box.w, 3) || !near(b.left, box.x, 3) || !near(b.top, box.y, 3)) {
-        throw plain('Photoshop did not move the layer "' + name + '" into place, so this size was not made. Try again.');
+      const got = Math.round(b.left) + ', ' + Math.round(b.top) + ' at ' + Math.round(widthOf(b)) + ' wide';
+      const asked = box.x + ', ' + box.y + ' at ' + box.w + ' wide';
+      const was = Math.round(before.left) + ', ' + Math.round(before.top) + ' at ' + Math.round(before.width) + ' wide';
+      console.log('makeSizes: "' + name + '" in "' + size.name + '": was ' + was + '; asked ' + asked + '; now ' + got);
+      // Close enough: within 2% of the width, and within 4 pixels of the spot.
+      const slack = Math.max(4, box.w * 0.02);
+      if (!near(widthOf(b), box.w, slack) || !near(b.left, box.x, 4) || !near(b.top, box.y, 4)) {
+        throw plain('Photoshop did not put the layer "' + name + '" in place, so this size was not made. It started at ' + was + ', should be at ' + asked + ', and ended at ' + got + '.');
       }
     }
 
