@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/* Design tokens. Lifted from treydenc.com/ai-principles: near-black ground, stone ink,
+ * silver accent, lifted-glass chrome, the poster spectrum for categories.
+ * Write the utility (bg-ground, text-ink-2, rounded-btn), never a raw value at a call site. */
+/* static: keep every token in the CSS even when no class uses it yet (the spectrum is read via var()). */
+@theme static {
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Menlo, monospace;
+
+  /* ground and surfaces */
+  --color-ground: #0a0a0a;
+  --color-surface-1: #141413;
+  --color-surface-2: #1c1917;
+  --color-surface-3: #292524;
+  --color-canvas: #030304; /* the black card content sits on, inside a glass pane */
+  --color-rail: #070708;
+  --color-lift: rgb(255 255 255 / 0.07);
+  --color-lift-hi: rgb(255 255 255 / 0.13);
+  --color-line: rgb(255 255 255 / 0.1);
+  --color-line-hi: rgb(255 255 255 / 0.22);
+
+  /* ink, with contrast on ground */
+  --color-ink-1: #f5f5f4; /* 18.1:1 */
+  --color-ink-2: #d6d3d1; /* 13.3:1 */
+  --color-ink-3: #a8a29e; /*  7.9:1 */
+
+  /* accent: silver. Marks and rules only. */
+  --color-accent: #c2c7cc;
+  --color-accent-text: #d3d6da;
+
+  /* state */
+  --color-error: #ff7a85;
+  --color-success: #5fbf8a;
+  --color-warning: #e6b450;
+
+  /* spectrum: categories only, always next to a text label */
+  --color-vermilion: #ff4a0a;
+  --color-marigold: #ffb000;
+  --color-cream: #ffecbe;
+  --color-green: #34a848;
+  --color-cobalt: #3a86f0;
+  --color-violet: #aa5aff;
+  --color-lavender: #e5c9ff;
+  --color-blush: #ffd6ec;
+
+  /* depth, measured off treydenc.com/ai-principles: a hairline of light on the top edge,
+   * brighter on glass than on solid surfaces, and one long soft shadow under floating chrome. */
+  --shadow-raised: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  --shadow-rail: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 30px 80px rgb(0 0 0 / 0.5);
+  --shadow-pane: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 30px 80px rgb(0 0 0 / 0.5);
+
+  /* shape and motion */
+  --radius-row: 4px;
+  --radius-btn: 8px;
+  --radius-panel: 16px;
+  --ease-out-n1: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ui: ease;
+  /* durations: pick by what the motion does. Leaving is quicker than arriving. */
+  --t-hover: 120ms; /* colour and border on hover */
+  --t-ui: 160ms;    /* controls changing state: toggles, tabs */
+  --t-state: 200ms; /* a surface appearing: results, notes */
+  --t-reveal: 400ms; /* a whole panel arriving */
+  --default-transition-duration: 160ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-ink-1);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+}
+
+:focus-visible {
+  outline: 2px solid #e7e5e4;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A result arriving: rises 6px and fades in. Used by .enter. */
+@keyframes enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.enter { animation: enter var(--t-state) var(--ease-out-n1) both; }
+
+/* The glass pane: three layers make the look. A colour field at the back, this pane over it,
+ * and a bg-canvas card inside the pane. Only use it where colour really sits behind it. */
+@utility glass-pane {
+  background-image: linear-gradient(rgb(24 24 28 / 0.58), rgb(10 10 14 / 0.7));
+  -webkit-backdrop-filter: blur(48px) saturate(1.4);
+  backdrop-filter: blur(48px) saturate(1.4);
+  box-shadow: var(--shadow-pane);
+}
+
+/* ── Motion templates ─────────────────────────────────────────────────────────
+ * Three ways a figure can arrive. Each plays once when its slide or panel mounts,
+ * and the reduced-motion rule above switches all of them off.
+ *   .stagger   children rise in one after another (set --step to change the gap)
+ *   .draw-x/y  a line draws itself from its start (set --d to delay it)
+ *   .seq       items of a sequence light up in order: put it on the list, and its
+ *              .draw-x lines wait for the item before them */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes draw-x { from { transform: scaleX(0); } }
+@keyframes draw-y { from { transform: scaleY(0); } }
+.stagger > *, .seq > * {
+  animation: rise var(--t-reveal) var(--ease-out-n1) both;
+  animation-delay: calc(var(--i, 0) * var(--step, 80ms) + var(--d, 0ms));
+}
+.seq { --step: 220ms; }
+:is(.stagger, .seq) > :nth-child(2) { --i: 1; }
+:is(.stagger, .seq) > :nth-child(3) { --i: 2; }
+:is(.stagger, .seq) > :nth-child(4) { --i: 3; }
+:is(.stagger, .seq) > :nth-child(5) { --i: 4; }
+:is(.stagger, .seq) > :nth-child(6) { --i: 5; }
+:is(.stagger, .seq) > :nth-child(7) { --i: 6; }
+:is(.stagger, .seq) > :nth-child(8) { --i: 7; }
+.draw-x, .draw-y {
+  animation: draw-x 700ms var(--ease-out-n1) both;
+  animation-delay: calc(var(--i, 0) * var(--step, 80ms) + var(--d, 0ms) + 120ms);
+  transform-origin: left center;
+}
+.draw-y { animation-name: draw-y; transform-origin: center top; }

@@ -1,0 +1,67 @@
+{
+  "sizes": [
+    {
+      "name": "One sheet",
+      "channel": "Print",
+      "w": 2000,
+      "h": 3000,
+      "note": "The master. Already made."
+    },
+    {
+      "name": "Story",
+      "channel": "Social",
+      "w": 1080,
+      "h": 1920,
+      "safe": "Keep the top 250px and bottom 340px clear of text: the app covers them."
+    },
+    {
+      "name": "Feed portrait",
+      "channel": "Social",
+      "w": 1080,
+      "h": 1350
+    },
+    {
+      "name": "Square",
+      "channel": "Social",
+      "w": 1080,
+      "h": 1080
+    },
+    {
+      "name": "Video thumbnail",
+      "channel": "Social",
+      "w": 1280,
+      "h": 720,
+      "safe": "Bottom-right 200 x 60px is covered by the duration badge."
+    },
+    {
+      "name": "Bus shelter",
+      "channel": "Out of home",
+      "w": 1185,
+      "h": 1750
+    },
+    {
+      "name": "Landscape billboard",
+      "channel": "Out of home",
+      "w": 4000,
+      "h": 1000
+    },
+    {
+      "name": "Web banner",
+      "channel": "Display",
+      "w": 1940,
+      "h": 500
+    },
+    {
+      "name": "Leaderboard",
+      "channel": "Display",
+      "w": 728,
+      "h": 90
+    },
+    {
+      "name": "Cinema screen slide",
+      "channel": "In cinema",
+      "w": 1998,
+      "h": 1080
+    }
+  ]
+}
