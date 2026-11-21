@@ -5,7 +5,7 @@
 import { useState, type ReactNode } from 'react';
 import {
   Button, Checkbox, CheckField, CheckRow, Chip, Count, EmptyState, ErrorNote, FileDrop, Input, Label, ListRow, Mark, Nav, NumberField, Panel, PanelRow, PanelSection,
-  Progress, PropRow, RowList, Select, SettingRow, Skeleton, Slider, SmallButton, StatusChip, StatusMark, StatusPill, SwitchRow, Tabs, Textarea, Thumb, TickRow,
+  Busy, NoteLine, Progress, PropRow, RowList, Select, SettingRow, Skeleton, Slider, SmallButton, StatusChip, StatusMark, StatusPill, SwitchRow, Tabs, Textarea, Thumb, TickRow,
   Toggle, Undecided, Workspace,
 } from '@/components/ui';
 import { plan } from '@/plan';
@@ -318,6 +318,15 @@ export default function Kit() {
                 <StatusMark tone="success">Connected</StatusMark><StatusMark tone="warning">Sample output</StatusMark><StatusMark tone="error">1 failed</StatusMark><StatusMark busy>Working</StatusMark>
                 <span className="mx-2 h-4 w-px bg-line" />
                 <StatusChip status="ready" /><StatusChip status="review" /><StatusChip status="failed" /><StatusChip status="working" />
+              </Stage>
+            </Entry>
+
+            <Entry part={C} title="Busy line and note line" intent="Under a result: one line while work goes on, then one line for each finding. The label carries the state and the sentence stays quiet.">
+              <Stage className="max-w-xs space-y-1.5">
+                <Busy>AI is looking at the picture</Busy>
+                <NoteLine tone="success" label="AI looked">Nothing looks wrong in the picture.</NoteLine>
+                <NoteLine tone="warning" label="Not checked">Keep the moon in frame. Part of the background is cropped off here.</NoteLine>
+                <NoteLine tone="error" label="Held back">Not made until its checks pass.</NoteLine>
               </Stage>
             </Entry>
 

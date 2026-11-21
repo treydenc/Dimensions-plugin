@@ -53,6 +53,7 @@
   /* shape and motion */
   --radius-row: 4px;
   --radius-btn: 8px;
+  --radius-card: 12px;  /* a canvas card set inside a pane */
   --radius-panel: 16px;
   --ease-out-n1: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-ui: ease;
@@ -132,3 +133,22 @@ body {
   transform-origin: left center;
 }
 .draw-y { animation-name: draw-y; transform-origin: center top; }
+
+/* The colour field: soft pools of the spectrum, the back layer on treydenc.com/ai-principles.
+ * It carries no meaning, so it is material, not signal: delete it and no information is lost.
+ * Nothing sits on it directly. Put a pane over it, and content on a canvas card inside the pane. */
+@utility color-field {
+  background:
+    radial-gradient(70% 42% at 0% 0%, rgb(255 176 0 / 0.95), rgb(255 74 10 / 0.6) 46%, transparent 76%),
+    radial-gradient(60% 40% at 100% 6%, rgb(58 134 240 / 0.8), transparent 72%),
+    radial-gradient(70% 38% at 96% 100%, rgb(255 74 10 / 0.75), rgb(170 90 255 / 0.45) 52%, transparent 80%),
+    radial-gradient(55% 36% at 0% 100%, rgb(229 201 255 / 0.6), transparent 72%),
+    var(--color-ground);
+}
+
+/* A pane over a field that does not move. Same gradient and edge light as glass-pane, but no
+ * backdrop blur: blur only earns its cost where something moves underneath. */
+@utility glass-still {
+  background-image: linear-gradient(rgb(24 24 28 / 0.58), rgb(10 10 14 / 0.7));
+  box-shadow: var(--shadow-pane);
+}

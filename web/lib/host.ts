@@ -5,6 +5,7 @@
 // Every message is a JSON string: { source, type, id?, payload?, error? }.
 //   ask('ping')         -> { app, version }
 //   ask('getDocument')  -> PsDocument, or null when no document is open
+//   ask('makeSizes', p) -> MakeSizesResult. Makes one new document per size. Use makeSizes(p).
 // Add a command in two places: a case in plugin/index.js, and a call to ask() here.
 
 export type PsLayer = {
@@ -13,6 +14,17 @@ export type PsLayer = {
   layers?: PsLayer[];
 };
 export type PsDocument = { id: number; title: string; width: number; height: number; resolution: number; layers: PsLayer[] };
+
+/** Where a layer's bounds must end up in the new document, in pixels. */
+export type MakeSizesBox = { x: number; y: number; w: number; h: number };
+/** One layer of the poster. box null means leave it out of this size. */
+export type MakeSizesLayer = { id: number; name: string; box: MakeSizesBox | null };
+/** One size to make. layers are back to front. */
+export type MakeSizesSize = { name: string; w: number; h: number; layers: MakeSizesLayer[] };
+export type MakeSizesPayload = { sourceId: number; sizes: MakeSizesSize[] };
+export type MakeSizesMade = { name: string; documentId: number; title: string };
+export type MakeSizesFailed = { name: string; error: string };
+export type MakeSizesResult = { made: MakeSizesMade[]; failed: MakeSizesFailed[] };
 
 type Message = { source: 'host' | 'tool'; type: string; id?: string; payload?: unknown; error?: string };
 
@@ -60,4 +72,9 @@ export function ask<T = unknown>(type: string, payload?: unknown, timeoutMs = 50
     });
     window.uxpHost!.postMessage(JSON.stringify({ source: 'tool', type, id, payload } satisfies Message));
   });
+}
+
+/** Make the other sizes of the poster. Each size becomes a new Photoshop document. Can take a while. */
+export function makeSizes(payload: MakeSizesPayload): Promise<MakeSizesResult> {
+  return ask<MakeSizesResult>('makeSizes', payload, 120000);
 }

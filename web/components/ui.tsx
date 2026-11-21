@@ -341,6 +341,27 @@ export function StatusMark({ tone = 'neutral', busy, children }: { tone?: keyof 
   );
 }
 
+/** A line that says work is still going on: a slow turning ring and what is being done. For a wait of more than a moment. */
+export function Busy({ children }: { children: ReactNode }) {
+  return (
+    <p role="status" className="enter flex items-center gap-2 text-[11px] leading-snug text-ink-2">
+      <span aria-hidden className="h-2.5 w-2.5 shrink-0 animate-spin rounded-full border-[1.5px] border-line border-t-ink-2 [animation-duration:1.1s]" />
+      <span className="min-w-0">{children}</span>
+    </p>
+  );
+}
+
+/** One finding under a result: a short label in the state colour, then the sentence in quiet ink.
+ *  The label carries the meaning; long sentences wrap under their own first word, not under the label. */
+export function NoteLine({ tone = 'neutral', label, children }: { tone?: keyof typeof TONES; label: string; children: ReactNode }) {
+  return (
+    <p className="enter flex items-baseline gap-2 text-[11px] leading-snug">
+      <span className={cx('w-18 shrink-0', WORD[tone])}>{label}</span>
+      <span className="min-w-0 flex-1 text-ink-2">{children}</span>
+    </p>
+  );
+}
+
 /** A count or measure in mono, for section headers and row ends. */
 export function Count({ children }: { children: ReactNode }) {
   return <span className="font-mono text-[11px] normal-case tracking-normal tabular-nums text-ink-3">{children}</span>;

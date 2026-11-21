@@ -1,48 +1,139 @@
-# [ tool name ]
+# Poster Resize
 
-[ One sentence: what it does and who it is for. ]
+A Photoshop panel that takes a film client's finished poster and proposes the other sizes the campaign needs, with every legal line checked in code and every layer still editable.
 
-> This README is a template. Fill in every bracket before you push.
-> Notes on the starter itself are in `docs/STARTER.md`.
+Practice build for a two-hour brief: `practice/02-poster-resize/BRIEF.md`.
+
+> [ Demo recording goes here: `docs/demo.gif`. Record the panel inside Photoshop, from "Propose" to "Make in Photoshop". ]
 
 ## The problem
 
-[ Two or three sentences. Who has this problem, how they handle it today, what it costs them. ]
+Agency designers rebuild a client's one sheet by hand for 20 to 40 placements, at 15 to 40 minutes each. Most of that time is moving and rescaling the same eight elements. The expensive mistakes are the legal lines: a billing block that is too small, a rating that fell off the edge.
+
+This tool gets a designer from the one sheet to a first set of sizes without leaving Photoshop. It does the repositioning, checks the legal lines, and hands over anything it cannot do by name.
 
 ## What it does
 
-[ Three bullets at most. What the person does, what the tool does, what the person decides. ]
+1. **The designer adds the client's rules.** They upload the client's own document (PDF, image or text). The tool proposes one rule for each kind of layer, shows the client's exact words beside it, and uses only the rules the designer ticks.
+2. **The designer ticks the sizes** and presses Propose. Each size comes back with a preview and one of three labels: **Ready**, **Check this**, or **Needs you**, with the reason.
+3. **The designer decides, size by size.** "Make in Photoshop" builds that size as a new document with every layer still movable. "Try again" asks for a new layout. A size that fails a check cannot be made.
+
+## Where AI is used, and where it is not
+
+The rule for this build: if a rule can be written down, code does it. A model is only used for judgment, and never has the last word.
+
+| Step | Done by | Why |
+|---|---|---|
+| Read the open document's layers | Code | It is a lookup. |
+| Read the client's rules document | **AI** | The rules arrive as prose in a PDF. |
+| Check each proposed rule, and build the plain-words version the designer reads | Code | What the designer ticks must be exactly what the checks run. |
+| Decide which rules to use | Person | Legal rules are the client's contract. |
+| Match layers to rules | Code | By layer name. |
+| Shrink the poster to fit a similar shape | Code | No judgment needed, and it costs nothing. |
+| Lay out a size whose shape is very different | **AI** | Composition is a judgment call. It returns positions only. |
+| Check every layout: legal lines present, nothing cropped or stretched, billing size, covered areas, logo clear space, text overlaps | Code | These are the rules that cost money when they are wrong. |
+| Look at a picture of the layout for what numbers cannot show | **AI** | "The island is floating in the sky" is not in the numbers. Advice only. |
+| Make the size in Photoshop | Person, then code | Nothing changes a document without a yes. |
+
+It is a fixed chain with caps, not an agent. The steps are the same for every size and known before it starts, so nothing needs the model to choose what happens next.
+
+## Architecture
+
+```mermaid
+flowchart TD
+  rulesDoc["Client's rules document"]:::person --> read["Read the rules"]:::ai
+  read --> gateRules{"Check each proposed rule"}:::code
+  gateRules --> tick["Designer ticks the rules to use"]:::person
+  tick --> rules[("Rules in use")]:::store
+
+  doc["Open poster in Photoshop"]:::code --> match["Match layers to rules by name"]:::code
+  sizes["Designer ticks the sizes"]:::person --> match
+  rules --> match
+
+  match --> fit["Scale the poster to fit"]:::code
+  fit --> gate1{"Checks"}:::code
+  gate1 -- "fails a check, or leaves the frame too empty" --> place["Place the layers"]:::ai
+  place --> gate2{"Checks"}:::code
+  gate2 -- "fails, one retry" --> place
+
+  gate1 -- "passes" --> look["Look at a picture of the layout"]:::ai
+  gate2 -- "passes, or tries used up" --> look
+  look -- "sees a problem, one retry" --> place
+
+  look --> panel["Panel: Ready, Check this, or Needs you"]:::code
+  panel --> yes["Designer: Make in Photoshop, or Try again"]:::person
+  yes --> ps["New document with editable layers"]:::code
+
+  classDef ai fill:#3b2f5c,stroke:#a78bfa,color:#f5f3ff
+  classDef code fill:#1c1917,stroke:#a8a29e,color:#e7e5e4
+  classDef person fill:#1f3a2e,stroke:#5fbf8a,color:#ecfdf5
+  classDef store fill:#0a0a0a,stroke:#57534e,color:#d6d3d1
+```
+
+Purple is a model call. Grey is plain code. Green is a decision the designer makes.
+
+Three caps keep it predictable: at most two tries each time a size is laid out, at most one send-back after the look, and at most two looks per size.
 
 ## Run it
 
-Needs Node 20.9 or later.
+Needs Node 20.9 or later, and Photoshop 28 with UXP Developer Tool for the panel.
 
 ```bash
+cd web
 npm install
 cp .env.example .env.local   # then add ANTHROPIC_API_KEY
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000 to use it in a browser on the sample poster. Without an API key it runs on sample output, and the panel says so.
 
-Without an API key the app still runs, on sample output. The pill in the top right says which mode it is in.
+To use it inside Photoshop:
 
-## How it works
+1. Keep `npm run dev` running.
+2. In UXP Developer Tool, add `plugin/manifest.json` and load it.
+3. Open `practice/02-poster-resize/poster.psd`. Its layers are named the way the rules expect.
+4. To try the rules reader, add `practice/02-poster-resize/client-rules.pdf` in the panel.
 
-[ The architecture in one line, for example: input -> Claude extracts -> code checks -> person approves -> saved. ]
+The model is `claude-sonnet-5-5` unless `ANTHROPIC_MODEL` says otherwise.
 
-- **Model:** [ which model, and why a single call / chain / agent ]
-- **Context:** [ what the model sees, and who chose it ]
-- **Tools:** [ what it can do, and what it cannot ]
-- **Prompt:** `lib/prompts.ts`
-- **Checks in code:** `lib/checks.ts`
-- **Where a person decides:** [ the approval step ]
+## What leaves the computer
 
-## What I would do next
+The poster is unreleased artwork, so the panel states this at all times: layer names, positions, the rules, and a small picture of each proposed layout go to the Anthropic API. The Photoshop file itself does not.
 
-- [ ]
-- [ ]
+## Where things are
 
-## How I used AI to build this
+| Path | What it is |
+|---|---|
+| `web/app/page.tsx` | The panel |
+| `web/app/api/layout` | The chain: scale to fit, place, check |
+| `web/app/api/review` | The look at a picture of a layout |
+| `web/app/api/rules` | The rules reader |
+| `web/lib/checks.ts` | Every check. No AI in this file. |
+| `web/lib/layout.ts` | Geometry, and the rules in the form code checks |
+| `web/lib/prompts.ts`, `web/lib/schemas.ts` | The prompts, and the shape every model answer must have |
+| `web/lib/claude.ts` | The only file that calls the Anthropic API |
+| `web/plan.ts` | Every decision, drawn at `/plan` |
+| `plugin/` | The Photoshop side: hosts the panel and makes the documents |
 
-See `NOTES.md`.
+## What it does not do yet
+
+- **Five of the nine sizes.** Story, Feed portrait, Square, Video thumbnail and Bus shelter. The four wide ones need a one-line title, which the poster does not have.
+- **Previews are drawn from the practice layer images,** not from the pixels of the open document.
+- **Quoted rules are only verified for text files.** For a PDF or an image the designer's read is the check, and the panel says so.
+- **One set of rules at a time,** not one per document.
+- **Nothing looks again after the designer edits a made document.**
+- **Rules with no field yet** are read but not enforced: "may stack on two lines", "may be extended".
+- **The areas each platform covers are written into code** from `sizes.json`.
+
+## With more time
+
+1. The four wide sizes, with a one-line title treatment.
+2. Check a document again after the designer has edited it, so the legal lines are checked at hand-off and not only at proposal.
+3. Rules saved per document, and edited in the panel through fixed controls.
+4. A cost view for each run: which sizes code did for free and what the model calls cost.
+5. Layout suggestions by genre or style.
+6. An on-device model for client-confidential files.
+
+## How I worked with AI
+
+The decisions, and the places I overruled or corrected the model, are logged in `web/plan.ts` and drawn at `/plan`. Working notes are in `NOTES.md`.

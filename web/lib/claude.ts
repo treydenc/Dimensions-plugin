@@ -20,15 +20,19 @@ export async function askClaude<S extends z.ZodType>(opts: {
   prompt: string;
   /** Names of files in data/ to show Claude with the prompt: PDFs, images, text. */
   files?: string[];
+  /** Pictures made in the app, as base64, shown to Claude with the prompt. */
+  images?: { mediaType: 'image/png' | 'image/jpeg'; data: string }[];
   schema: S;
   sample: z.input<S>;
   maxTokens?: number;
 }): Promise<{ data: z.infer<S>; source: Source }> {
   if (!hasKey()) return { data: opts.schema.parse(opts.sample), source: 'sample' };
 
-  const content: Anthropic.MessageParam['content'] = opts.files?.length
-    ? [...(await toContentBlocks(opts.files)), { type: 'text', text: opts.prompt }]
-    : opts.prompt;
+  const blocks: Anthropic.ContentBlockParam[] = [
+    ...(opts.files?.length ? await toContentBlocks(opts.files) : []),
+    ...(opts.images ?? []).map((i) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: i.mediaType, data: i.data } })),
+  ];
+  const content: Anthropic.MessageParam['content'] = blocks.length ? [...blocks, { type: 'text', text: opts.prompt }] : opts.prompt;
 
   const message = await getClient().messages.parse({
     model: MODEL,

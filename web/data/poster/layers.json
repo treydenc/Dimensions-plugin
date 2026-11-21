@@ -1,0 +1,114 @@
+{
+  "title": "The Long Tide",
+  "canvas": {
+    "w": 2000,
+    "h": 3000
+  },
+  "order": "back to front",
+  "layers": [
+    {
+      "name": "background",
+      "file": "layers/background.png",
+      "role": "background",
+      "box": [
+        0,
+        0,
+        2000,
+        3000
+      ],
+      "locked": false,
+      "rule": "May be cropped or extended. Keep the moon in frame."
+    },
+    {
+      "name": "key-art",
+      "file": "layers/key-art.png",
+      "role": "key art",
+      "box": [
+        180,
+        1010,
+        900,
+        1500
+      ],
+      "locked": false,
+      "rule": "May be scaled and moved. Never cropped: the whole lighthouse and its lamp stay visible."
+    },
+    {
+      "name": "tagline",
+      "file": "layers/tagline.png",
+      "role": "tagline",
+      "box": [
+        301,
+        250,
+        1398,
+        76
+      ],
+      "locked": false,
+      "rule": "May be dropped on sizes under 600px on the short side."
+    },
+    {
+      "name": "title",
+      "file": "layers/title.png",
+      "role": "title",
+      "box": [
+        350,
+        1720,
+        1299,
+        638
+      ],
+      "locked": true,
+      "rule": "Never distorted, never cropped. May be scaled. May stack on two lines or run on one."
+    },
+    {
+      "name": "date",
+      "file": "layers/date.png",
+      "role": "release date",
+      "box": [
+        559,
+        2420,
+        881,
+        99
+      ],
+      "locked": true,
+      "rule": "Must appear on every size."
+    },
+    {
+      "name": "billing",
+      "file": "layers/billing.png",
+      "role": "billing block",
+      "box": [
+        223,
+        2560,
+        1553,
+        213
+      ],
+      "locked": true,
+      "rule": "Legal. Must appear on every size above 900px on the short side, at a cap height of at least 15% of the title cap height."
+    },
+    {
+      "name": "studio-logo",
+      "file": "layers/studio-logo.png",
+      "role": "studio logo",
+      "box": [
+        140,
+        2840,
+        300,
+        120
+      ],
+      "locked": true,
+      "rule": "Fixed proportions. Clear space of half its height on all sides."
+    },
+    {
+      "name": "rating",
+      "file": "layers/rating.png",
+      "role": "rating",
+      "box": [
+        1710,
+        2850,
+        150,
+        100
+      ],
+      "locked": true,
+      "rule": "Legal. Must appear on every size."
+    }
+  ]
+}
